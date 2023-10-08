@@ -33,16 +33,18 @@ class game24Config(SearchConfig):
     def get_actions(self, state: game24State) -> list[game24Action]:
         x, y = state[0], state[1]
         propose_prompt = utils.propose_prompt_wrap(state[0], state[1], self.prompt)
-        #print(f'propose prompt:{propose_prompt}')
+        # print(f'PROPOSE PROMPT START\n{propose_prompt}PROPOSE PROMPT END')
         
         ## query with llama
         # TOOD is this the right input?
         model_input = propose_prompt
-        outputs = []
-        for idx in range(0, self.n_actions, self.batch_size):
-            n_samples = min(self.n_actions - idx, self.batch_size)
-            outputs += self.base_model.generate([model_input] * n_samples, max_gen_len=512, end_token=")", hide_input=True).text
-        outputs = self.base_model.generate([model_input] * 1, max_gen_len=256, end_token=")", hide_input=True).text[0]
+        # outputs = []
+        # TODO what does this loop do?
+        # for idx in range(0, self.n_actions, self.batch_size):
+        #     n_samples = min(self.n_actions - idx, self.batch_size)
+        #     outputs += self.base_model.generate([model_input] * n_samples, max_gen_len=512, end_token=")", hide_input=True).text
+        outputs = [self.base_model.generate([model_input] * 1, max_gen_len=256, end_token=")", hide_input=True).text[0]]
+        # print(f'OUTPUTS START\n{outputs[0]}\nOUTPUTS END')
         ## query with GPT
         # outputs = self.base_model.generate(propose_prompt, num_return_sequences=1, stop=None).text
 
@@ -51,13 +53,13 @@ class game24Config(SearchConfig):
         outputs = outputs[0].split('Input: ')
         ## post-process for llama and gpt
         outputs = outputs[0].split('\n')
-        #print(f'original actions: {outputs}')
+        # print(f'ORIGINAL ACTIONS START\n{"\n".join(outputs)}\nORIGINAL ACTIONS END')
         ## correct the left number status
         # outputs = [utils.correct_left_numbers(x, y, action) if 'left' in action else action for action in outputs]
-        return_actions = [y + _ + '\n' for _ in outputs]
+        return_actions = [y + _ + '\n' for _ in outputs if _ != '']
         # flatten_actions = [action.replace('\n', '->') for action in outputs]
         # flatten_actions = '\n'.join(flatten_actions)
-        # print(f'propose actions: \n{flatten_actions}, #: {len(return_actions)}')
+        # print(f'PROPOSE ACTIONS START\n{"".join(return_actions)}\nPROPOSE ACTIONS END')
         return return_actions
 
     def fast_reward(self, state: game24State, action: game24Action) -> tuple[float, dict]:
